@@ -835,6 +835,15 @@ void MqttClient::setTxPayloadSize(unsigned short size)
 {
   // NOOJ WAS HERE
   log_i("MqttClient::setTxPayloadSize(): NOOJ says: _txPayloadBuffer should be freed and NULLed here.");
+    
+  // TODO: Be clever and try to preserve existing _txPayloadBuffer contents?
+  // TODO: Check if this messes up the state of pending messages
+  if (_txPayloadBuffer) {
+    free(_txPayloadBuffer);
+    _txPayloadBuffer = NULL;
+    _txPayloadBufferIndex = 0;
+  }
+    
   _tx_payload_buffer_size = size;
 }
 
