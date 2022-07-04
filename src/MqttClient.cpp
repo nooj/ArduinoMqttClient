@@ -802,6 +802,7 @@ void MqttClient::setConnectionTimeout(unsigned long timeout)
 
 void MqttClient::setTxPayloadSize(unsigned short size)
 {
+  // NOOJ WAS HERE
   _tx_payload_buffer_size = size;
 }
 
