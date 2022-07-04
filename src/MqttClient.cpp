@@ -70,6 +70,7 @@ MqttClient::MqttClient(Client* client) :
   _keepAliveInterval(60 * 1000L),
   _connectionTimeout(30 * 1000L),
   _tx_payload_buffer_size(TX_PAYLOAD_BUFFER_SIZE),
+  _last_mallocd_size(0),         // DEBUG NOOJ
   _connectError(MQTT_SUCCESS),
   _connected(false),
   _subscribeQos(0x00),
@@ -666,6 +667,36 @@ size_t MqttClient::write(const uint8_t *buf, size_t size)
 
   if (_txPayloadBuffer == NULL) {
     _txPayloadBuffer = (uint8_t*)malloc(_tx_payload_buffer_size);
+    _last_mallocd_size = _tx_payload_buffer_size;  //DEBUG NOOJ
+  }
+
+  if (_txPayloadBufferIndex + size > _last_mallocd_size) {
+    log_e(
+      "MqttClient::write() ERROR: BUFFER OVERFLOW: _last_mallocd_size = %d, total bytes being written = %d", 
+      _last_mallocd_size, _txPayloadBufferIndex + size
+    );
+    
+    /* 
+     * Working example of buffer overflow bug:
+     *
+      // make my_settings > 512 chars
+      mqttClient.beginMessage(SETTINGS_TOPIC);
+      mqttClient.print(my_settings);            // prints first 256 chars of my_settings
+      mqttClient.endMessage();
+        
+      mqttClient.setTxPayloadSize(512);
+      mqttClient.beginMessage(SETTINGS_TOPIC);
+      mqttClient.print(my_settings);           // heap corruption
+      mqttClient.endMessage();
+        
+      // output 
+      [V][ssl_client.cpp:295] send_ssl_data(): Writing HTTP request with 17 bytes...
+      [V][ssl_client.cpp:295] send_ssl_data(): Writing HTTP request with 256 bytes...
+      [I][MqttClient.cpp:815] setTxPayloadSize(): MqttClient::setTxPayloadSize(): NOOJ says: _txPayloadBuffer should be freed and NULLed here.
+      [E][MqttClient.cpp:677] write(): MqttClient::write() ERROR: BUFFER OVERFLOW: _last_mallocd_size = 256, total bytes being written = 512
+      CORRUPT HEAP: multi_heap.c:432 detected at 0x3ffd6ab4
+      abort() was called at PC 0x4008d447 on core 1
+    */
   }
 
   memcpy(&_txPayloadBuffer[_txPayloadBufferIndex], buf, size);
@@ -803,6 +834,7 @@ void MqttClient::setConnectionTimeout(unsigned long timeout)
 void MqttClient::setTxPayloadSize(unsigned short size)
 {
   // NOOJ WAS HERE
+  log_i("MqttClient::setTxPayloadSize(): NOOJ says: _txPayloadBuffer should be freed and NULLed here.");
   _tx_payload_buffer_size = size;
 }
 
