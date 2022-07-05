@@ -842,6 +842,7 @@ void MqttClient::setTxPayloadSize(unsigned short size)
     free(_txPayloadBuffer);
     _txPayloadBuffer = NULL;
     _txPayloadBufferIndex = 0;
+    _last_mallocd_size = 0;
   }
     
   _tx_payload_buffer_size = size;
