@@ -144,7 +144,6 @@ private:
   unsigned long _keepAliveInterval;
   unsigned long _connectionTimeout;
   unsigned short _tx_payload_buffer_size;
-  unsigned short _last_mallocd_size;
 
   int _connectError;
   bool _connected;
